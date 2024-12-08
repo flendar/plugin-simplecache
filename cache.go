@@ -76,6 +76,8 @@ type cacheData struct {
 
 // ServeHTTP serves an HTTP request.
 func (m *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("w's type is %T\n", w)
+	
 	cs := cacheMissStatus
 
 	key := cacheKey(r)
@@ -96,6 +98,7 @@ func (m *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if m.cfg.AddStatusHeader {
 				w.Header().Set(cacheHeader, cacheHitStatus)
 			}
+			d
 			w.WriteHeader(data.Status)
 			_, _ = w.Write(data.Body)
 			return
@@ -168,4 +171,12 @@ func (rw *responseWriter) Write(p []byte) (int, error) {
 func (rw *responseWriter) WriteHeader(s int) {
 	rw.status = s
 	rw.ResponseWriter.WriteHeader(s)
+}
+
+func (w *wrapper) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+    h, ok := w.underlyingResponseWriter.(http.Hijacker)
+    if !ok {
+        return nil, nil, errors.New("hijack not supported")
+    }
+    return h.Hijack()
 }
